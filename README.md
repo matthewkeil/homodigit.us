@@ -22,7 +22,8 @@ Assumptions: You are familiar with kubernetes and this stuff
 ## 1) Deploy a Kubernetes cluster
 The discussion about how to size and setup your cluster goes beyond a simple do this or do that because costs can vary widely depending on what one actually needs.  The first question you should ask yourself is how available does your cluster need to be?  Can you get away with one of your applications going down for 15-20 seconds if it crashes, like for a sandbox website or for a non-critical environment?  Or, are you handling real-time transactions that happen on millisecond timescale?  We will shoot for something in the middle where there will be virtually no downtime but the idea of 99.99999% uptime isn't necessary.
 
-Here is the doc link for the [cloud config set](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create) command.
+We need to set up our project for the gcloud sdk.  We are greating a regional cluster so we need to set the compute/region, however if you are going with a zonal cluster you will want to set your compute/zone.  Here is the doc link for the [cloud config set](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create) command.
+
 `gcloud config set project homodigitus`
 
 `gcloud config set compute/region us-central`
