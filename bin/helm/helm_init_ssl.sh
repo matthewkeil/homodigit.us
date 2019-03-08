@@ -89,5 +89,4 @@ cat "$DIR"/helm.crt "$DIR"/signing.crt "$DIR"/ca.crt > "$DIR"/helm.pem
 # [[ -f "$PREFIX".role-binding.yaml ]] && printf "\n>>>\n>>> ${PREFIX}.role-binding.yaml is missing\n>>>\n" && exit 1
 # kubectl apply -f "$PREFIX".role-binding.yaml
 
-helm init --tiller-tls --tiller-tls-verify --tiller-tls-cert ssl/tiller.pem --tiller-tls-key ssl/tiller.key --tls-ca-cert ssl/ca.crt --service-account tiller
-    # --upgrade
+# helm init --tiller-tls --tiller-tls-verify --tiller-tls-cert ssl/tiller.pem --tiller-tls-key ssl/tiller.key --tls-ca-cert ssl/ca.crt --service-account tiller
