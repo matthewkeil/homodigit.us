@@ -1,0 +1,5 @@
+use uc
+db.dropDatabase()
+use uc
+db.getUser('ucApi')
+exit

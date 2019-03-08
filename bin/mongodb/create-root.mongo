@@ -1,0 +1,7 @@
+use admin
+db.createUser({user:'admin',pwd:'password',roles:[{role:'root',db:'admin'}]});
+use uc
+db.createUser({user:'ucApi',pwd:'ucApi',roles:[{role:'dbOwner',db:'uc'}]});
+use uc-sessions
+db.createUser({user:'ucApi',pwd:'ucApi',roles:[{role:'dbOwner',db:'uc-sessions'}]});
+db.shutdownServer();
