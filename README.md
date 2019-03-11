@@ -59,9 +59,6 @@ We need to set up our project for the gcloud sdk.  We are greating a regional cl
 
 ## 2) Setup SSL for Helm/Tiller
 
-Videos to watch
-
-
 We need to get our ssl certs sorted before we get ensure secure communication between Helm and Tiller.  You can find a script in /bin/ssl of this repository that will help create them for us.  You will need to enter some configuration details into rootCA.conf and X509.conf in the directory with the scripts.
 
 Here is the link to the openssl website for writing a 
