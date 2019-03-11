@@ -6,22 +6,20 @@ I was attempting to install Neo4j on my local machine to try it out.  I ran into
 
 The big guys out there have teams of people that help to do this sort of thing but now with the new tools that exist it is possible for small dev teams, and even individual developers, to enjoy the same workflow automation and flexibility.  Now that I am starting to get my feet under me, as a developer, I am starting to get requests from friends to "help them with their website."  Not only do I want to be able to host my own pet projects but I would also like to be able to provide high availability for my friends and their projects as well.  Insert homodigit.us.
 
-In this repository you will find links to some information resources that I found useful.  They are a base resource to help successful deploy and secure your projects, and those of your friends/clients. I use this project personally and it is as much a resource for me to not have to look up commands as a tool for you to follow (after all im following it myself).  Good luck and feel free to reach out to me if you have any questions or run into any issues you can seem to solve.
+In this repository you will find the full Helm chart necessary as well as many links to information resources that I found useful while building this.  They are a base resource to help successful deploy and secure your projects, and those of your friends/clients. I use this project personally and it is as much a resource for me to not have to look up commands as a tool for you to follow (after all im following it myself).  Good luck and feel free to reach out to me if you have any questions or run into any issues you can't seem to solve with a SO search.
 
-This solution was designed with the modern full-stack JavaScript developer in mind.  The big pieces it will solve are 
-- focuses on developer ergonomics and efficiency for deployment so you can focus on coding
-- describe big picture architectural patterns and why they were chosen
+This solution was designed with the modern full-stack JavaScript developer in mind.  The big pieces we will work on together:
+- focus on developer ergonomics and efficiency for deployment so you can focus on coding
+- describe big picture architectural patterns so you can understand *why* they were chosen
 - utilize modern cloud-based architecture
 - ensure [high-availability](https://en.wikipedia.org/wiki/High_availability)
-- minimize cost through analysis of various solutions/architecture
+- minimize cost
 - serve static front-end assets over https
 - serve back-end api's over https (most likely a Node.js app)
 - automate production distribution and versioning
 - automate sandbox/staging distribution for feature branches
 
 ## Kubernetes orchestrated cluster. DevOps platform. Serves bucket storage over https. Production Node.js hosting.
-
-The goal of this project is to provide a template for other to easily provide a full service production and development platform. This solution was designed with the modern full-stack JavaScript developer in mind and focuses on hosting pod-based node servers, serving client assets stored in cloud storage buckets over https, utilizing a cdn for edge caching all while minimizing cost and guaranteeing reliability.
 
 ### Starting from scratch - The Big Picture
 1) Deploy Kubernetes cluster
@@ -32,25 +30,27 @@ The goal of this project is to provide a template for other to easily provide a 
 6) Deploy certbot to provide and maintain ssl certificate for nginx
 7) Configure/Deploy Jenkins
 
-Assumptions: You are familiar with Docker, Kubernetes and
-- gcloud
+Assumptions: You will need the following installed
+- Docker
 - kubectl
-  
----
+- minikube
+- gcloud
+
 
 ## 1) Deploy a Kubernetes cluster
 The discussion about how to size and setup your cluster goes beyond a simple do this or do that because costs can vary widely depending on what one actually needs.  The first question you should ask yourself is how available does your cluster need to be?  Can you get away with one of your applications going down for 15-20 seconds if it crashes, like for a sandbox website or for a non-critical environment?  Or, are you handling real-time transactions that happen on millisecond timescale?  We will shoot for something in the middle where there will be virtually no downtime but the idea of 99.99999% uptime isn't necessary.
 
-We need to set up our project for the gcloud sdk.  We are greating a regional cluster so we need to set the compute/region, however if you are going with a zonal cluster you will want to set your compute/zone.  Here is the doc link for the [cloud config set](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create) command.
+We need to set up our project for the gcloud sdk.  We are greating a regional cluster so we need to set the compute/region, however if you are going with a zonal cluster you will want to set your compute/zone. Then create the regional cluster.
 
-`gcloud config set project PROJECT_NAME`
+[Docs Link: gcloud config set](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create)
 
-`gcloud config set compute/region us-central`
+`gcloud config set project **PROJECT_NAME**`
 
+`gcloud config set compute/region **REGION**`
 
-Next create a regional cluster.  Here is the doc link for the [gcloud container clusters create](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create) command.
+[Docs Link: gcloud container clusters create](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create)
 
-`gcloud container clusters create CLUSTER_NAME 
+`gcloud container clusters create **CLUSTER_NAME**
 --machine-type=f1-micro
 --num-nodes=3
 --region us-central1
@@ -58,6 +58,9 @@ Next create a regional cluster.  Here is the doc link for the [gcloud container 
 
 
 ## 2) Setup SSL for Helm/Tiller
+
+Videos to watch
+
 
 We need to get our ssl certs sorted before we get ensure secure communication between Helm and Tiller.  You can find a script in /bin/ssl of this repository that will help create them for us.  You will need to enter some configuration details into rootCA.conf and X509.conf in the directory with the scripts.
 
@@ -70,6 +73,12 @@ Here is the link to the openssl website for writing a
 The big picture will be creating a private certificate signing authority so that we can self-sign our own certificates for secured communication.  We will create a root CA cert, a signing cert so that we dont have to expose our private keys to our root cert and client certs for Helm and Tiller to utilize.
 
 ## 3) Install Helm/Tiller
+
+Videos to watch
+- [Getting Started with Helm and Kubernetes](https://www.youtube.com/watch?v=HTj3MMZE6zg&index=1&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5)
+- [Building Helm Charts from the Ground Up](https://www.youtube.com/watch?v=vQX5nokoqrQ&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=5)
+- [Securing Helm - Helm Summit 2018](https://www.youtube.com/watch?v=U8chk2s3i94&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=3&t=0s)
+
 
 Here is the doc link for the [kubectl apply](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) command.
 
