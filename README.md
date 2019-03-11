@@ -2,11 +2,11 @@
 
 Why you ask?  Where the name comes from is another story entirely but in short this is a tool to help my fellow coders go smoothly down their own paths.
 
-I was attempting to install Neo4j on my local machine to try it out.  I ran into numerous issues due to a Java Runtime dependencies. That led me to Docker. What a *fabulous and terrible* tool.  It sure is nice when it just works.  However, if you have ever tried to work with disk/file permissions and syncing content between your local file structure and the container you will understand the terrible part... I was [working on a development tool called docker-development](https://github.com/matthewkeil/docker-development) to help me solve some of these challenges and realized Docker is a mess of pipes, patches, port forwarding, etc.  Over numerous hours googling for solutions, I ran across this Kubernetes thing over and over.  I realized the goal of Kubernetes was to do container orchestration, precisely what my aim was to simplify without knowing what i wanted was a thing, no less that it had a name.  Then I heard it was ex-google technology that got open-sourced and has now gone viral.
+I was attempting to install Neo4j on my local machine to try it out.  I ran into numerous issues due to a Java Runtime dependencies. That led me to Docker. What a *fabulous and terrible* tool.  It sure is nice when it just works.  However, if you have ever tried to work with disk/file permissions and syncing content between your local file structure and the container you will understand the terrible part... I was [working on a development tool called docker-development](https://github.com/matthewkeil/docker-development) to help me solve some of these challenges and realized Docker is a mess of pipes, patches, port forwarding, etc.  Over numerous hours googling for solutions, I ran across this Kubernetes thing over and over.  I realized the goal of Kubernetes was to do container orchestration.  Precisely my aim, to simplify that process without knowing what I wanted was an industry identified problem with a production solution.  Then I heard it was ex-google technology that got open-sourced and has now gone viral.
 
 The big guys out there have teams of people that help to do this sort of thing but now with the new tools that exist it is possible for small dev teams, and even individual developers, to enjoy the same workflow automation and flexibility.  Now that I am starting to get my feet under me, as a developer, I am starting to get requests from friends to "help them with their website."  Not only do I want to be able to host my own pet projects but I would also like to be able to provide high availability for my friends and their projects as well.  Insert homodigit.us.
 
-In this repository you will find the full Helm chart necessary as well as many links to information resources that I found useful while building this.  They are a base resource to help successful deploy and secure your projects, and those of your friends/clients. I use this project personally and it is as much a resource for me to not have to look up commands as a tool for you to follow (after all im following it myself).  Good luck and feel free to reach out to me if you have any questions or run into any issues you can't seem to solve with a SO search.
+In this repository you will find the full Helm chart necessary as well as many links to information resources that I found useful while building this.  They are a base resource to help successful deploy and secure your projects, and those of your friends/clients. I use this project personally and it is as much a resource for me to not have to look up commands as a tool for you to follow (after all im following it myself).  Good luck and feel free to reach out to me if you have any questions or run into any issues you can't seem to solve with a stack-overflow search.
 
 This solution was designed with the modern full-stack JavaScript developer in mind.  The big pieces we will work on together:
 - focus on developer ergonomics and efficiency for deployment so you can focus on coding
@@ -57,9 +57,12 @@ We need to set up our project for the gcloud sdk.  We are greating a regional cl
 --preemptible`
 
 
-## 2) Setup SSL for Helm/Tiller
+## 2) Create self-signed SSL certs with which Helm and Tiller can securely communicate
 
-We need to get our ssl certs sorted before we get ensure secure communication between Helm and Tiller.  You can find a script in /bin/ssl of this repository that will help create them for us.  You will need to enter some configuration details into rootCA.conf and X509.conf in the directory with the scripts.
+Videos to watch
+- [Securing Helm - Helm Summit 2018](https://www.youtube.com/watch?v=U8chk2s3i94&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=3&t=0s)
+
+We need to get our ssl certs sorted before we can ensure secure communication between Helm and Tiller.  You can find some info on what the heck X.509 is [here](https://en.wikipedia.org/wiki/X.509) [here](https://security.stackexchange.com/questions/36932/what-is-the-difference-between-ssl-and-x-509-certificates) and [here](http://www.sslauthority.com/x509-what-you-should-know/), what [self-signed ssl certificates are here](). There are a few ways to accomplish this and they are reviewed in the first video "Securing Helm." You can find a script in /bin/ssl of this repository that will help create them for us.  You will need to enter some configuration details into rootCA.conf and X509.conf in the directory with the scripts.
 
 Here is the link to the openssl website for writing a 
 
@@ -67,14 +70,13 @@ Here is the link to the openssl website for writing a
 
 [Root CA configuration file](https://jamielinux.com/docs/openssl-certificate-authority/appendix/root-configuration-file.html)
 
-The big picture will be creating a private certificate signing authority so that we can self-sign our own certificates for secured communication.  We will create a root CA cert, a signing cert so that we dont have to expose our private keys to our root cert and client certs for Helm and Tiller to utilize.
+The big picture will be creating a private certificate signing authority so that we can self-sign our own certificates for secured communication.  We will create a root CA cert, a signing cert so that we dont have to expose our our root cert, and client certs for Helm and Tiller to utilize.
 
 ## 3) Install Helm/Tiller
 
 Videos to watch
 - [Getting Started with Helm and Kubernetes](https://www.youtube.com/watch?v=HTj3MMZE6zg&index=1&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5)
 - [Building Helm Charts from the Ground Up](https://www.youtube.com/watch?v=vQX5nokoqrQ&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=5)
-- [Securing Helm - Helm Summit 2018](https://www.youtube.com/watch?v=U8chk2s3i94&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=3&t=0s)
 
 
 Here is the doc link for the [kubectl apply](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) command.
