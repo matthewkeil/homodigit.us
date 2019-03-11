@@ -1,5 +1,13 @@
 # homodigit.us
 
+Why you ask?  I was attempting to install Neo4j on my local machine to try it out.  I ran into numerous issues due to a Java Runtime dependencies. That led me to Docker. What a *fabulous and terrible* tool.  It sure is nice when it just works.  However, if you have ever tried to work with disk/file permissions and syncing content between your local file structure and the container you will understand the terrible part... I was [working on a development tool called docker-development](https://github.com/matthewkeil/docker-development) to help me solve some of these challenges and realized Docker a mess pipes, patches, port forwarding, etc.  Over numerous hours googling for solutions, I ran across this Kubernetes thing over and over.  I realized its goal was to do container orchestration, precisely what my aim was to simplify without knowing what i wanted was a thing, no less that it had a name.
+
+The big guys out there have teams of people that help to do this sort of thing but now with the new tools that exist it is possible for small dev teams, and even individual developers, to enjoy the same workflow automation and flexibility.  Now that I am starting to get my feet under me, as a developer, I am starting to get requests from friends to "help them with their website."  No only do I want to be able to host my own pet projects but I would also like to be able to provide high availability for my friends and their projects as well.  Insert homodigit.us.  Where the name comes from is another story entirely but in short this is a tool for my fellow coders along their own paths.
+
+In this repository you will find links to some information resources that I found useful and this will help you to successful deploy and secure your projects, and those of your friends/clients. I use this project personally and it is as much a resource for me to not have to look up commands as a tool for you to follow (after all im following it myself).  Good luck and feel free to reach out to me if you have any questions or run into any issues you can seem to solve.
+
+- Matt
+
 ## Kubernetes orchestrated cluster. DevOps platform. Serves bucket storage over https. Production Node.js hosting.
 
 The goal of this project is to provide a template for other to easily provide a full service production and development platform. This solution was designed with the modern full-stack JavaScript developer in mind and focuses on hosting pod-based node servers, serving client assets stored in cloud storage buckets over https, utilizing a cdn for edge caching all while minimizing cost and guaranteeing reliability.
