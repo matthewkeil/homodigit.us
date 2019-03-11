@@ -1,65 +1,72 @@
 # homodigit.us
 
+Why you ask?  Where the name comes from is another story entirely but in short this is a tool to help my fellow coders go smoothly down their own paths.  [It didn't hurt when I heard it was ex-google technology,](https://blog.risingstack.com/the-history-of-kubernetes/) that got open-sourced and has now [gone viral with the big guys.](https://www.cncf.io/about/members/).
+
+It seems like a lot, I know. But trust me, it's worth it. This journey started for me because I was attempting to install Neo4j on my local machine to give it a shot.  I ran into numerous issues due to a Java Runtime dependency conflict. That led me to Docker. What a *fabulous and terrible* tool.  It sure is nice when it just works.  However, if you have ever tried to work with disk/file permissions and syncing content between your local file structure and the container you will understand the terrible part... I was [working on a development tool called docker-development](https://github.com/matthewkeil/docker-development) to help me solve some of these challenges and realized Docker is a mess of pipes, patches, port forwarding, etc and I was still working on my local machine.  I cringed at thinking what i faced over ssh during deployment.  Over numerous hours googling for solutions, I ran across this Kubernetes thing over and over.  I realized the goal of Kubernetes was to do container orchestration.  Precisely my aim, to simplify that process without knowing what I wanted was an industry identified problem with a production solution.
+
+With platinum sponsored the likes of Cisco, AWS, GoogleCloud, IBM Cloud, the [Cloud Native Computing Foundation](https://www.cncf.io) develops and manages all of what we are going to use.  Which means it is as awesome as the combined budget of the [sponsor lineup which is like infinite.](https://www.cncf.io/about/members/) They want, nay expect, this stuff to just work.
+
 The big pieces we will work on together:
-- focuses on developer ergonomics and efficiency so you can focus on coding
+- focus on developer ergonomics and efficiency so coding time can be spent coding
 - describe big picture architectural patterns so you can understand *why* they were chosen should you choose differently
+- minimize cost
 - utilize modern cloud-based architecture
 - ensure [high-availability](https://en.wikipedia.org/wiki/High_availability)
-- minimize cost
-- serve static from bucket storage over https
-- serve back-end api's over https
-- automate production distribution and versioning
-- automate sandbox/staging distribution for feature branch development
+- limit static IP's and cloud load balancer rules
+- serve all content over https with [free self-renewing certificates](https://letsencrypt.org/)
+- serve api's from preemptible vm's
+- serve static assets from bucket storage
+- manage/automate production versioning and distribution
+- manage/automate staging on production for feature verification
 
-Why you ask?  Where the name comes from is another story entirely but in short this is a tool to help my fellow coders go smoothly down their own paths.
+[containerd](https://containerd.io/): they base wrapper and plumbing with which Docker containers can be run and accessed.  There words are "It manages the complete container life-cycle of its host system, from image transfer and storage to container execution and supervision to low-level storage to network attachments and beyond."
 
-I was attempting to install Neo4j on my local machine to try it out.  I ran into numerous issues due to a Java Runtime dependencies. That led me to Docker. What a *fabulous and terrible* tool.  It sure is nice when it just works.  However, if you have ever tried to work with disk/file permissions and syncing content between your local file structure and the container you will understand the terrible part... I was [working on a development tool called docker-development](https://github.com/matthewkeil/docker-development) to help me solve some of these challenges and realized Docker is a mess of pipes, patches, port forwarding, etc.  Over numerous hours googling for solutions, I ran across this Kubernetes thing over and over.  I realized the goal of Kubernetes was to do container orchestration.  Precisely my aim, to simplify that process without knowing what I wanted was an industry identified problem with a production solution.  Then I heard it was ex-google technology that got open-sourced and has now gone viral.
+[Kubernetes](https://kubernetes.io/): a set of objects that help create, run, stop, replicate, manage versioning, facilitate communication and handler authorization with "containerd's". There words are "Production-Grade Container Orchestration."  yea... theirs is better
 
-The big guys out there have teams of people that help to do this sort of thing but now with the new tools that exist it is possible for small dev teams, and even individual developers, to enjoy the same workflow automation and flexibility.  Now that I am starting to get my feet under me, as a developer, I am starting to get requests from friends to "help them with their website."  Not only do I want to be able to host my own pet projects but I would also like to be able to provide high availability for my friends and their projects as well.  Insert homodigit.us.
+[Helm](https://helm.sh/): "The package manager for Kubernetes."
+
+Before these tools the big guys had huge teams of people that help to do this sort of thing but now with the new tooling that exist it is possible for small dev teams, and even individual developers, to enjoy the same workflow automation and flexibility.  Now that I am starting to get my feet under me, as a developer, I am starting to get requests from friends to "help them with their website."  Not only do I want to be able to host my own pet projects but I would also like to be able to provide high availability for my friends and their projects as well.  Insert homodigit.us.
 
 In this repository you will find the full Helm chart necessary as well as many links to information resources that I found useful while building this.  They are a base resource to help successful deploy and secure your projects, and those of your friends/clients. I use this project personally and it is as much a resource for me to not have to look up commands as a tool for you to follow (after all im following it myself).  Good luck and feel free to reach out to me if you have any questions or run into any issues you can't seem to solve with a stack-overflow search.
 
-## Kubernetes orchestrated cluster. DevOps platform. Serves bucket storage over https. Production Node.js hosting.
+## Kubernetes orchestrated cluster. DevOps platform. Static assets over https. Auto-scaling production server hosting (for when you go viral).
 
-### Starting from scratch - The Big Picture
+### To the technical part - The Big Picture
 1) Deploy Kubernetes cluster
-2) Setup ssl for for Helm/Tiller
-3) Install Helm/Tiller
+2) Install Helm/Tiller
+3) Setup ssl for for Helm/Tiller to communicate
 4) Configure/Deploy nginx
 5) Route traffic from static IP through ingress object to nginx
 6) Deploy certbot to provide and maintain ssl certificate for nginx
 7) Configure/Deploy Jenkins
 
-Assumptions: You will need the following installed
-- Docker
-- kubectl
-- minikube
-- gcloud
 
+## Step 1) Deploy a Kubernetes cluster
+The discussion about how to size and setup your cluster goes beyond a simple do this or do that because costs can vary widely depending on what one actually needs.  The first question you should ask yourself is how available does your cluster need to be?  Can you get away with one of your applications going down for 15-20 seconds if it crashes, like for a sandbox website or for a non-critical environment?  Or, are you handling real-time transactions that happen on millisecond timescale?  We will shoot for something in the middle where there will be virtually no downtime but the idea of 99.99999% uptime isn't necessary. I use google for hosting but this will work just as well on AWS or any of the other big hosts with a Kubernetes interface.  The platform specific sdk stuff from this step will be different but past here its all the same.
 
-## 1) Deploy a Kubernetes cluster
-The discussion about how to size and setup your cluster goes beyond a simple do this or do that because costs can vary widely depending on what one actually needs.  The first question you should ask yourself is how available does your cluster need to be?  Can you get away with one of your applications going down for 15-20 seconds if it crashes, like for a sandbox website or for a non-critical environment?  Or, are you handling real-time transactions that happen on millisecond timescale?  We will shoot for something in the middle where there will be virtually no downtime but the idea of 99.99999% uptime isn't necessary.
+We will be creating a three node cluster, ie three VM's, and each will use an SSD boot disk. That isn't critical but I will be hosting a database from my cluster and I want my cache to served from SSD. We can also choose to have our persistent data on SSD also but that is another button we will need to push later. We can set up auto scale up and down but that is also for another time. For the moment know that we are using preemptible machines which means google can pull them at any point but we get a huge cost savings of about 70%!! If we schedule our workloads appropriately that wont matter because our cluster will self heal and spin up some new instances for us, and then rearrange our workloads without any interruption.  This is how we will should achieve at least five-nines of uptime. In theory, even if the node that has the master goes down, the cluster should be healed within the allowable downtime for 5-9's.  This also assumes the compute zone the cluster is in doesn't experience downtime which is unlikely but definitely not certain. If you want to ensure higher availability it is possible but you will need to set up multiple kubernetes masters in different compute zones, or even in different regions and set up a VPN or SSL tunnel to connect the lot. If it sounds like i dont know what im talking about then you are correct.  This is beyond my knowledge at the moment so I guess if I ever come up with a need we will learn together. Each VM we create will be billed at the rates listed here. 
 
-We need to set up our project for the gcloud sdk.  We are greating a regional cluster so we need to set the compute/region, however if you are going with a zonal cluster you will want to set your compute/zone. We will be creating a three node cluster, ie three VM's, and each will use an SSD boot disk. That isn't critical but I will be hosting a database from my cluster and I want my cache to served from SSD. We can also choose to have our persistent data on SSD also but that is another button we will need to push later. We can set up auto scale up and down but that is also for another time. For the moment know that we are using preemptible machines which means google can pull them at any point but we get a huge cost savings of about 70%!! If we schedule our workloads appropriately that wont matter because our cluster will self heal and spin up some new instances for us, and then rearrange our workloads without any interruption.  This is how we will should achieve at least five-nines of uptime. In theory, even if the node that has the master goes down, the cluster should be healed within the allowable downtime for 5-9's.  This also assumes the compute zone the cluster is in doesn't experience downtime which is unlikely but definitely not certain. If you want to ensure higher availability it is possible but you will need to set up multiple kubernetes masters in different compute zones, or even in different regions and set up a VPN or SSL tunnel to connect the lot. If it sounds like i dont know what im talking about then you are correct.  This is beyond my knowledge at the moment so I guess if I ever come up with a need we will learn together.
+[Pricing for Google Compute Engine Instances](https://cloud.google.com/compute/pricing).  
 
-Each VM we create will be billed at the rates listed here. [Pricing for Google Compute Engine Instances](https://cloud.google.com/compute/pricing).  
+We need to set up our project for the gcloud sdk.  We are creating a regional cluster for better availability because the nodes will be spread across different zones (ie data centers) so we need to set the compute/region, however if you are going with a zonal cluster you will want to set your compute/zone.  The minimum number of nodes for a regional cluster is 3 so if you want less than that go with a zone based cluster.
 
-[Docs Link: gcloud config set](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create)
+[Fist things first, install gcloud](https://cloud.google.com/sdk/install) and while you are there poke around a bit... If you are too busy for that you can
+
+read the settings for the next command 'gcloud config set' [here](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create)
 
 `gcloud config set project **PROJECT_NAME**`
 
 `gcloud config set compute/region **REGION**`
 
-[Docs Link: gcloud container clusters create](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create)
+read the settings for the next command 'gcloud container clusters create' [here](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create)
 
 `gcloud container clusters create **CLUSTER_NAME**
---region us-central1
+--zone us-central1
 --machine-type=n1-standard-1
 --num-nodes=3
 --disk-type=pd-ssd
 --scopes=gke-default,storage-full
 --preemptible`
-
 
 ## 2) Create self-signed SSL certs with which Helm and Tiller can securely communicate
 
