@@ -4,7 +4,15 @@ Why you ask?  Where the name comes from is another story entirely but in short t
 
 This journey started for me because I was attempting to install Neo4j on my local machine to give it a shot.  I ran into numerous issues due to a Java Runtime dependency conflict. That led me to Docker. What a *fabulous* and **terrible** tool!  It sure is nice when it just works.  **However**, if you have ever tried to work with user/disk/file permissions like manually syncing content between the dev folder and the container you will understand the terrible part... I was [working on a development tool called docker-development](https://github.com/matthewkeil/docker-development) to help me solve some of these challenges and realized Docker is a mess of pipes, patches, port forwarding, etc. and I was still working on my local machine. Over numerous hours googling for solutions, I ran across this Kubernetes thing over and over. I realized the goal of Kubernetes was to do container orchestration, precisely my aim.
 
-[The Cloud Native Computing Foundation](https://www.cncf.io) develops and manages all of what we are going to use.  Which means it is as awesome as the combined budget of the [sponsor lineup which is like infinite.](https://www.cncf.io/about/members/) They want, nay expect, this stuff to just work. A note on longevity and developer fatigue. If you read the sponsers list see forward is this becomes the defacto standard or they all, like that whole long list, moves on and the projects go dark. It's not a single company like Facebook chooses to stop supporting React. Nor is it like one company doing the ultimate breaking change with Angular 1/2. Both of those sentences will one-day lend themselves to their own blog post I suppose. For now we will move on to what we will accomplish.
+[The Cloud Native Computing Foundation](https://www.cncf.io) develops and manages all of what we are going to use.  Which means it is as awesome as the combined budget of the [sponsor lineup which is like infinite.](https://www.cncf.io/about/members/) They want, nay expect, this stuff to just work.
+
+A note on longevity and developer fatigue. If you read the sponsors list you will get that this is now the defacto standard for production architecture.  Not likely that whole group will just up and stop. It's not a single company like Facebook choosing to stop supporting React. Nor is it like one company doing the ultimate breaking change like Angular 1 -> 2. Both of those sentences will one-day lend themselves to their own blog post I suppose. For now lets move on to what we will accomplish.
+
+## Big Picture
+- reliable server platform to provide scalable, available hosting
+- CI/CD Platform to handle devops
+  1) if one pushes changes to a master branch and those changes get tested and put into production
+  2) if one pushes changes to a "git checkout -b new-feature" and add a 'git tag -a feature-name -m "added a great new feature"' it will build that branch in a staging area and create a routing rule to access it"
 
 ## The End Goals:
 - focus on developer ergonomics and efficiency so coding time can be spent coding
