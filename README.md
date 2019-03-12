@@ -90,22 +90,44 @@ You will need an account with google because these are all billable services. Ju
 
 [Fist things first, install gcloud](https://cloud.google.com/sdk/install) and while you are there poke around the commands a bit... If you are too busy for that you can
  
-read the settings for the next command 'gcloud config set' [here](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create)
+read the settings for the next command ['gcloud config set'](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create)
 
 `gcloud config set project **PROJECT_NAME**`
 
 `gcloud config set compute/region **REGION**`
 
-read the settings for the next command 'gcloud container clusters create' [here](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create)
+read the settings for the next command ['gcloud container clusters create'](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create)
 
 `gcloud container clusters create **CLUSTER_NAME**
---zone us-central1-a
+--region us-central1
 --machine-type=n1-standard-1
---num-nodes=3
+--num-nodes=1
 --scopes=gke-default,storage-full
 --enable-autorepair
 --enable-autoupgrade
 --preemptible`
+
+you can verify
+
+Now that we have a cluster up and running lets set up our machine to interact with it.  The gcloud command is a way to provision and interact with the google cloud infrastructure. Ie stuff that is billable.  A virtual machine is billable. Storage is billable.
+
+The idea of having many instances of an app running is different. That is a workload. Workloads run on machines (or virtual machines in this case) and machines can run many different workloads.  My computer can run a development instance of mongodb, a few nodejs servers and a webpack-dev-server right? "Hardware" is handled by gcloud whereas the workloads are handled by kubectl.  kubectl is the command line tool that allows one to interact with a cluster and its workloads, etc.
+
+This is a nuance and an important one so you know where to look for the right command.  You can scale the number of nodes (virtual machines) you have running in your cluster with gcloud. Those cost money for each one right.  You can also interact with bucket storage and other provider level objects through that command. Whereas one can scale the number of instances of my database read-replicas are running from kubectl. That is scaling a workload and a topic for below.
+
+For now we will need to transfer our cluster information from gcloud to kubectl.  They are designed to work together and gcloud will help set up kubectl.
+
+read the settings for the next command ['gcloud container clusters get-credentials'](https://cloud.google.com/sdk/gcloud/reference/container/clusters/get-credentials)
+
+ `gcloud container clusters get-credentials **CLUSTER_NAME** --region **REGION**` 
+
+read the settings for the next command ['kubectl config'](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#config) and will allow us to verify that the prior gcloud command worked as planned.
+
+[`kubectl config current-context`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#-em-current-context-em-) will show you what cluster you will communicate with when entering commands into kubectl.
+
+[`kubectl config view`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#-em-view-em-) will show you the complete config. You can find the full config file on disk with `cat ~/.kube/config`
+
+
 
 ---
 ## 2) Facilitate secure communication between Helm and Tiller
@@ -115,8 +137,8 @@ SSL Videos to watch
 - [Intro to Digital Certificates](https://www.youtube.com/watch?v=qXLD2UHq2vk&t=10s). A shorter, less MIT version of the info above.
 - [for the ADD crowd here is a 2min version of the same info from 30k feet](https://www.youtube.com/watch?v=SJJmoDZ3il8)
 - [Creating self-signed ssl certificates](https://www.youtube.com/watch?v=T4Df5_cojAs)
-- [Intro to gRPC](https://www.youtube.com/watch?v=RoXT_Rkg8LA) Not critical to know.
-- [Securing Helm - Helm Summit 2018](https://www.youtube.com/watch?v=U8chk2s3i94&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=3&t=942s) I fast forwarded you to the section relevant for our use.
+- [Intro to gRPC](https://www.youtube.com/watch?v=RoXT_Rkg8LA) Not critical but nice to know.
+- [Securing Helm - Helm Summit 2018](https://www.youtube.com/watch?v=U8chk2s3i94&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=3&t=942s) - Fast forwarded to the section relevant for our use.
 
 Info Links
 - [filename extensions](https://en.wikipedia.org/wiki/X.509#Certificate_filename_extensions)
@@ -124,7 +146,7 @@ Info Links
 - [minimum x.509 conf](http://www.sslauthority.com/x509-what-you-should-know/)
 
 These are tasks we need to complete
-1) create a private key for our CA
+1) create a private key for our CA (Certificate Authority)
 2) create a conf file for our CA
 3) use the key and conf file to create a self signed certificate for the CA
 4) create a conf file for our intermediate CA
@@ -137,17 +159,17 @@ Or you can conveniently use the script I wrote to make the mundane easy. Its fou
 
 Here is the link to the openssl website for writing a [X059 configuration file](https://docs.genesys.com/Documentation/PSDK/9.0.x/Developer/TLSOpenSSLConfigurationFile) and for the [Root CA configuration file](https://jamielinux.com/docs/openssl-certificate-authority/appendix/root-configuration-file.html) and here are the commands we called in that script with links to the docs for info on the flags used
 
-[openssl genrsa](https://www.openssl.org/docs/manmaster/man1/genrsa.html) - RSA key generation utility
+read the settings for the next command [openssl genrsa](https://www.openssl.org/docs/manmaster/man1/genrsa.html) - RSA key generation utility
 
 `openssl genrsa -out new.key 4096`
 
-[openssl req](https://www.openssl.org/docs/manmaster/man1/req.html) - certificate generating utility
+read the settings for the next command [openssl req](https://www.openssl.org/docs/manmaster/man1/req.html) - certificate generating utility
 
 `cat rootCA.conf | openssl req -key ca.key -new -x509 -days 7300 -sha256 -out ca.crt -extensions v3_ca`
 
 `openssl req -new -sha256 -nodes -newkey rsa:4096 -keyout new.key -out new.csr -config <( cat X509.conf )`
 
-[openssl x509](https://www.openssl.org/docs/manmaster/man1/x509.html) - certificate signing utility
+read the settings for the next command [openssl x509](https://www.openssl.org/docs/manmaster/man1/x509.html) - certificate signing utility
 
 `openssl x509 -req -days 500 -sha256 -in new.csr -out new.crt -CA signatory.crt -CAkey signatory.key -CAcreateserial -extfile X509.conf -passin "pass:password"`
 

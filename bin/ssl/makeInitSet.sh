@@ -1,12 +1,30 @@
 #!/bin/bash
 set -x
 
+if [[ ! $1 ]]; then
+    printf "you must provide a password for signing the certs as the first parameter when running this script\n\n"
+    exit 1
+fi
+
+PASSWORD=$1
+
 DIR=../../ssl
 
 [[ ! -d $DIR ]] && mkdir "$DIR"
 #
 #
-#   Build csr
+#   save password in ssl folder as .password file
+#
+#
+echo $PASSWORD > ${DIR}/.password
+#
+#
+#   Build csr and key then sign by correct signatory
+#
+#   Signatory defaults to intermediateCA.crt and 
+#   intermediateCA.key unless the set name to be created,
+#   passed in the first paramater, is "intermediateCA." 
+#   Then the root ca.crt and ca.key are the signatory
 #
 #
 function makeKeyCsrCertSet() {
@@ -34,11 +52,11 @@ function makeKeyCsrCertSet() {
         -in "$PREFIX".csr -out "$PREFIX".crt \
         -CA "$SIGNATORY".crt -CAkey "$SIGNATORY".key -CAcreateserial  \
         -extfile X509.conf \
-        -passin "pass:homodigitus" > /dev/null 2>&1
+        -passin "pass:$PASSWORD" > /dev/null 2>&1
 }
 #
 #
-#   Build cert
+#   Build CA and intermediate CA certs
 #
 #
 function generateCACerts() {
@@ -73,15 +91,23 @@ function generateCACerts() {
 generateCACerts
 #
 #
-#   generate account certs
+#   generate tiller account certs
 #
 #
 makeKeyCsrCertSet tiller
 
 cat "$DIR"/tiller.crt "$DIR"/intermediateCA.crt "$DIR"/ca.crt > "$DIR"/tiller.pem
-
+#
+#
+#   generate helm account certs
+#
+#
 makeKeyCsrCertSet helm
 
 cat "$DIR"/helm.crt "$DIR"/intermediateCA.crt "$DIR"/ca.crt > "$DIR"/helm.pem
-
+#
+#
+#   delete certificate signing requests
+#
+#
 find "$DIR" -name "*.csr" -delete
