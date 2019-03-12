@@ -1,16 +1,16 @@
 # homodigit.us
 
-Why you ask?  Where the name comes from is another story entirely but in short this is a tool to help my fellow coders go smoothly down their own paths.  [It didn't hurt when I heard it was ex-google technology,](https://blog.risingstack.com/the-history-of-kubernetes/) that got open-sourced and has now [gone viral with the big guys.](https://www.cncf.io/about/members/).
+Why you ask?  Where the name comes from is another story entirely but in short this is a tool to help you, my fellow coder, go smoothly down your own path.  [It didn't hurt when I heard it was google's aptly named](https://blog.risingstack.com/the-history-of-kubernetes/) [borg](https://en.wikipedia.org/wiki/Borg) project that got open-sourced. [Short is, it went viral... go ahead, click me.](https://www.cncf.io/about/members/) If you did you are probably as blown away as I was. 
 
-It seems like a lot, I know. But trust me, it's worth it. This journey started for me because I was attempting to install Neo4j on my local machine to give it a shot.  I ran into numerous issues due to a Java Runtime dependency conflict. That led me to Docker. What a *fabulous and terrible* tool.  It sure is nice when it just works.  However, if you have ever tried to work with disk/file permissions and syncing content between your local file structure and the container you will understand the terrible part... I was [working on a development tool called docker-development](https://github.com/matthewkeil/docker-development) to help me solve some of these challenges and realized Docker is a mess of pipes, patches, port forwarding, etc and I was still working on my local machine.  I cringed at thinking what i faced over ssh during deployment.  Over numerous hours googling for solutions, I ran across this Kubernetes thing over and over.  I realized the goal of Kubernetes was to do container orchestration.  Precisely my aim, to simplify that process without knowing what I wanted was an industry identified problem with a production solution.
+This journey started for me because I was attempting to install Neo4j on my local machine to give it a shot.  I ran into numerous issues due to a Java Runtime dependency conflict. That led me to Docker. What a *fabulous* and **terrible** tool.  It sure is nice when it just works.  **However**, if you have ever tried to work with user/disk/file permissions like manually syncing content between the dev folder and the container you will understand the terrible part... I was [working on a development tool called docker-development](https://github.com/matthewkeil/docker-development) to help me solve some of these challenges and realized Docker is a mess of pipes, patches, port forwarding, etc and I was still working on my local machine. Over numerous hours googling for solutions, I ran across this Kubernetes thing over and over. I realized the goal of Kubernetes was to do container orchestration. Precisely my aim. But, but the api is daunting.
 
-With platinum sponsored the likes of Cisco, AWS, GoogleCloud, IBM Cloud, the [Cloud Native Computing Foundation](https://www.cncf.io) develops and manages all of what we are going to use.  Which means it is as awesome as the combined budget of the [sponsor lineup which is like infinite.](https://www.cncf.io/about/members/) They want, nay expect, this stuff to just work.
+[The Cloud Native Computing Foundation](https://www.cncf.io) develops and manages all of what we are going to use.  Which means it is as awesome as the combined budget of the [sponsor lineup which is like infinite.](https://www.cncf.io/about/members/) They want, nay expect, this stuff to just work. As it looks the only two paths I see forward is this becomes the defacto standard or they all, like that whole long list, moves on and the projects go dark. Its not a single company like Facebook chooses to stop supporting React. Nor is it like one company doing the ultimate breaking change with Angular 1/2. Both of those sentences will one-day lend themselves to their own blog post I suppose. For now we will move on to what we will accomplish
 
-The big pieces we will work on together:
+## The End Goals:
 - focus on developer ergonomics and efficiency so coding time can be spent coding
 - describe big picture architectural patterns so you can understand *why* they were chosen should you choose differently
-- minimize cost
 - utilize modern cloud-based architecture
+- learn how to minimize cost
 - ensure [high-availability](https://en.wikipedia.org/wiki/High_availability)
 - limit static IP's and cloud load balancer rules
 - serve all content over https with [free self-renewing certificates](https://letsencrypt.org/)
@@ -19,9 +19,9 @@ The big pieces we will work on together:
 - manage/automate production versioning and distribution
 - manage/automate staging on production for feature verification
 
-[containerd](https://containerd.io/): they base wrapper and plumbing with which Docker containers can be run and accessed.  Their words are "It manages the complete container life-cycle of its host system, from image transfer and storage to container execution and supervision to low-level storage to network attachments and beyond."
+[containerd](https://containerd.io/): the base wrapper and plumbing with which Docker-like containers can be run and accessed.  Their words are "It manages the complete container life-cycle of its host system, from image transfer and storage to container execution and supervision to low-level storage to network attachments and beyond."
 
-[Kubernetes](https://kubernetes.io/): a set of objects that help create, run, stop, replicate, manage versioning, facilitate communication and handler authorization with "containerd's". Their words are "Production-Grade Container Orchestration."  yea... theirs is better
+[Kubernetes](https://kubernetes.io/): a set of objects that help aid, create, run, stop, replicate, version, communicate with, handle authorization and otherwise interact with "workloads" in the form of "containerd's". Their words are "Production-Grade Container Orchestration."  yea... theirs is better
 
 [Helm](https://helm.sh/): "The package manager for Kubernetes."
 
