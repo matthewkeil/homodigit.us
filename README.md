@@ -74,11 +74,11 @@ We are using [`--preemptible` machines](https://cloud.google.com/kubernetes-engi
 
 ` http.createServer((req, res, next) => res.write('<h1>hello, this is pod ' + podName + ' reporting, yo...</h1>'));`
 
+There are few levels of "persistent" data we should discuss. The fastest will be RAM storage. While not really persistent it will be loaded the same way from the Docker image.  Should memory run out it will overflow into a swap file.
 
-each will use an SSD boot disk. That isn't critical but I'm a nerd, I want it, and I'm willing to pay the difference so that my system files, etc are on SSD. We can also choose to have our persistent data on SSD, say for a database, but that is another button we will need to push later. 
+The second fastest will be persistent disks. They can be sized with the `--disk-size=DISK_SIZE` [flag.](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create#--disk-size) This is where disk access happens during runtime, ie the warmed cache of a database that is larger than memory, and thus where memory swap files are loaded. If you want your page file to run quicker you can adjust this by using the `--disk-type=pd-ssd` [flag.](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create#--disk-type) Alternately you can choose a different machine type with more memory to avoid needing a swap file. Persistent storage, like the database files that aren't in cache, are best handled by another method. We will get there.
 
-
-
+[This is the full google discussion about disks](https://cloud.google.com/compute/docs/disks/).
 
 Each VM we create will be billed at the rates listed here. 
 
@@ -86,8 +86,10 @@ Each VM we create will be billed at the rates listed here.
 
 We need to set up our project for the gcloud sdk.  We are creating a regional cluster for better availability because the nodes will be spread across different zones (ie data centers) so we need to set the compute/region, however if you are going with a zonal cluster you will want to set your compute/zone.  The minimum number of nodes for a regional cluster is 3 so if you want less than that go with a zone based cluster.
 
-[Fist things first, install gcloud](https://cloud.google.com/sdk/install) and while you are there poke around the commands a bit... If you are too busy for that you can
+You will need an account with google because these are all billable services. Just for you, actually everyone you arent that special, they are giving away $300 of free credit to try out the platform and see if you like it. [Go here for it.](https://console.cloud.google.com/freetrial) 
 
+[Fist things first, install gcloud](https://cloud.google.com/sdk/install) and while you are there poke around the commands a bit... If you are too busy for that you can
+ 
 read the settings for the next command 'gcloud config set' [here](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create)
 
 `gcloud config set project **PROJECT_NAME**`
@@ -100,17 +102,25 @@ read the settings for the next command 'gcloud container clusters create' [here]
 --zone us-central1-a
 --machine-type=n1-standard-1
 --num-nodes=3
---disk-type=pd-ssd
 --scopes=gke-default,storage-full
+--enable-autorepair
+--enable-autoupgrade
 --preemptible`
 
 ---
-## 2) Create self-signed SSL certs with which Helm and Tiller can securely communicate
+## 2) Facilitate secure communication between Helm and Tiller
 
-Videos to watch
-- [Securing Helm - Helm Summit 2018](https://www.youtube.com/watch?v=U8chk2s3i94&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=3&t=0s)
+SSL Videos to watch
+- [MIT OpenCourseWare - SSL and HTTPS](https://www.youtube.com/watch?v=q1OF_0ICt9A) on youtube. It is MIT thorough as one would hope. Its also as long as your face when you realized you needed to have a base understanding of this stuff.
+- [Intro to Digital Certificates](https://www.youtube.com/watch?v=qXLD2UHq2vk&t=10s). A shorter, less MIT version of the info above.
+- [for the ADD crowd here is a 2min version of the same info from 30k feet](https://www.youtube.com/watch?v=SJJmoDZ3il8)
+- [Creating self-signed ssl certificates](https://www.youtube.com/watch?v=T4Df5_cojAs)
 
-We need to get our ssl certs sorted before we can ensure secure communication between Helm and Tiller.  You can find some info on what the heck X.509 is [here](https://en.wikipedia.org/wiki/X.509) [here](https://security.stackexchange.com/questions/36932/what-is-the-difference-between-ssl-and-x-509-certificates) and [here](http://www.sslauthority.com/x509-what-you-should-know/), what [self-signed ssl certificates are here](). There are a few ways to accomplish this and they are reviewed in the first video "Securing Helm." You can find a script in /bin/ssl of this repository that will help create them for us.  You will need to enter some configuration details into rootCA.conf and X509.conf in the directory with the scripts.
+Here is the Helm/Tiller specifics from a theory perspective.  We will get to code below
+- [Intro to gRPC](https://www.youtube.com/watch?v=RoXT_Rkg8LA) Not critical to know.
+- [Securing Helm - Helm Summit 2018](https://www.youtube.com/watch?v=U8chk2s3i94&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=3&t=942s)
+
+We need to get our ssl certs sorted before we can ensure secure communication between Helm and Tiller.  You can find some info on what the heck X.509 is [here](https://en.wikipedia.org/wiki/X.509) [here](https://security.stackexchange.com/questions/36932/what-is-the-difference-between-ssl-and-x-509-certificates) and [here](http://www.sslauthority.com/x509-what-you-should-know/), what [self-signed ssl certificates are here](). There are a few ways to accomplish this and they are reviewed in the first video "Securing Helm." You can find a script in /bin/ssl of t6 b his repository that will help create them for us.  You will need to enter some configuration details into rootCA.conf and X509.conf in the directory with the scripts.
 
 Here is the link to the openssl website for writing a 
 
