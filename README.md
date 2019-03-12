@@ -1,8 +1,8 @@
 # homodigit.us
 
-Why you ask?  Where the name comes from is another story entirely but in short this is a tool to help you, my fellow coder, go smoothly down your own path.  [It didn't hurt when I heard it was google's aptly named](https://blog.risingstack.com/the-history-of-kubernetes/) [borg](https://en.wikipedia.org/wiki/Borg) project that got open-sourced. [Short is, it went viral... go ahead, click me.](https://www.cncf.io/about/members/) If you did you are probably as blown away as I was. 
+Why you ask?  Where the name comes from is another story entirely but in short this is a tool to help you, my fellow coder, go smoothly down your own path.  [It didn't hurt to hear it is google's aptly named](https://blog.risingstack.com/the-history-of-kubernetes/) [borg](https://en.wikipedia.org/wiki/Borg) project that got open-sourced. [Short is, it went viral... go ahead, click me.](https://www.cncf.io/about/members/) If you did you are probably as blown away as I was. 
 
-This journey started for me because I was attempting to install Neo4j on my local machine to give it a shot.  I ran into numerous issues due to a Java Runtime dependency conflict. That led me to Docker. What a *fabulous* and **terrible** tool!  It sure is nice when it just works.  **However**, if you have ever tried to work with user/disk/file permissions like manually syncing content between the dev folder and the container you will understand the terrible part... I was [working on a development tool called docker-development](https://github.com/matthewkeil/docker-development) to help me solve some of these challenges and realized Docker is a mess of pipes, patches, port forwarding, etc. and I was still working on my local machine. Over numerous hours googling for solutions, I ran across this Kubernetes thing over and over. I realized the goal of Kubernetes was to do container orchestration, precisely my aim. But, but the api is daunting.
+This journey started for me because I was attempting to install Neo4j on my local machine to give it a shot.  I ran into numerous issues due to a Java Runtime dependency conflict. That led me to Docker. What a *fabulous* and **terrible** tool!  It sure is nice when it just works.  **However**, if you have ever tried to work with user/disk/file permissions like manually syncing content between the dev folder and the container you will understand the terrible part... I was [working on a development tool called docker-development](https://github.com/matthewkeil/docker-development) to help me solve some of these challenges and realized Docker is a mess of pipes, patches, port forwarding, etc. and I was still working on my local machine. Over numerous hours googling for solutions, I ran across this Kubernetes thing over and over. I realized the goal of Kubernetes was to do container orchestration, precisely my aim.
 
 [The Cloud Native Computing Foundation](https://www.cncf.io) develops and manages all of what we are going to use.  Which means it is as awesome as the combined budget of the [sponsor lineup which is like infinite.](https://www.cncf.io/about/members/) They want, nay expect, this stuff to just work. A note on longevity and developer fatigue. If you read the sponsers list see forward is this becomes the defacto standard or they all, like that whole long list, moves on and the projects go dark. It's not a single company like Facebook chooses to stop supporting React. Nor is it like one company doing the ultimate breaking change with Angular 1/2. Both of those sentences will one-day lend themselves to their own blog post I suppose. For now we will move on to what we will accomplish.
 
@@ -43,26 +43,36 @@ In this repository you will find everything you need, as well as many links to t
 
 ---
 ## Step 1) Deploy a Kubernetes cluster
-The discussion about how to size and setup your cluster goes beyond a simple do this or do that, because needs and costs vary widely. 
+The discussion about how to size and setup your cluster goes beyond a simple do this or do that, because needs and costs vary widely. The platform specific stuff from this step will be nuanced differently on different hosts but step 2 on its the all same no matter where there cluster lives. I use google now but I've actually chosen to make as many of the pieces platform agnostic so I wont be locked into them should pricing change suddenly. 
 
 The first question you should ask yourself is how available does your cluster need to be?  Can you get away with one of your applications going down for 15-20 seconds if it crashes, like for a sandbox website or for a non-critical environment?  Or, are you handling real-time transactions that happen on a millisecond timescale? We will shoot for something in the middle where there will be virtually no downtime but the idea of 99.999999% uptime isn't necessary.
 
-Next, does the site's target client live in one region, like the US or Asia, or are they global? We will assume one region. To be fair, if you have a global audience and need high availability, this doc is a great executive overview to manage someone doing that, like as part of their full-time job. Setting up global load balancing and database sharding/replication for low latency needs a post of its own. Coincidentally I'm for hire. This is my final project for coding boot camp. No, they did not teach  this stuff at boot camp. Think about what I can do to help you accomplish your goals. Enough free advertising, I use google for hosting but this will work just as well on AWS or any of the other big hosts with a Kubernetes interface. The platform specific sdk stuff from this step will be different but past here its all the same.
+Next, does the site's target client live in one region, like the US or Asia, or are they global? We will assume one region. To be fair, if you have a global audience and need high availability, this doc is a great executive overview to manage someone doing that, like as part of their full-time job. Wink. Coincidentally, I'm for hire as this is my final project for coding boot camp. No, they did not teach this stuff at boot camp.
 
+We have another choice to make is how many masters we want. That is silly to ask when I haven't introduced it. Watch this video. OK, you are back. Chances of a data center going down are small but possible so placing redundant masters in different physical facilities can make sense depending on your use case. I think the engine's usually prioritize the master nodes when scheduling work (ie the preempible part) and dont cannibalize them as readily thus killing the routing tables. So realistically, if a data center goes out, even temporarily, so does the routing tables to the rest of your app. It's NOT a common thing but it's a point of note.
 
-We will be creating a three node cluster, ie three VM's, and each will use an SSD boot disk. That isn't critical but I'm a nerd, I want it, and I'm willing to pay the difference so that my system files, etc are on SSD. We can also choose to have our persistent data on SSD, say for a database, but that is another button we will need to push later. 
+So to summarize, from least to most available:
+- 1 node, 1 master, 1 zone, 1 region
+- many nodes, 1 master, 1 zone, 1 region
+- many nodes, many masters, 1 zone, 1 region
+- many nodes, many masters, many zones, 1 region (regional cluster and the next topic up)
+- many nodes, many masters, many zones, many regions
 
-
-
-The default size for a cluster on gke is three
+The default size for a cluster on gke is three nodes with one being the master. If you choose a regional cluster the default number of nodes will be three and all three will be masters.  There is a sticky wicket here. On google creating a "1" node regional cluster means 1 node in each zone of the region with redundant masters. So if you try and to a "3" node regional cluster what you will get is is three node pools spread across three zones of the region and they will all have three nodes, of which one in each will be the a master. 
 
 We can also autoscale our pod VM count with the `--enable-autoscale` flag. [Here is the doc link.](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create#--enable-autoscaling) It covers the `--max-nodes=` and `--min-nodes=` flags as well as a note about how it affects [node pools.](https://cloud.google.com/sdk/gcloud/reference/container/node-pools/create).
 
-For the moment know that we are using [preemptible](https://cloud.google.com/kubernetes-engine/docs/how-to/preemptible-vms) machines which means google can pull them at any point but we get a huge cost savings of about 70%!! We are using Kubernetes though so that doesn't matter if we set things up right and understand why we did it. Unless you are serving persistent data or need to ensure a cache is always warm.  Most of what is served is stateless so swapping one identical process for another identical process  doesn't matter.
+We are using [`--preemptible` machines](https://cloud.google.com/kubernetes-engine/docs/how-to/preemptible-vms) which means google can pull them at any point but we get a huge cost savings of about 70%!! We are using Kubernetes though so that doesn't matter.  Unless you are serving persistent data or need to ensure a cache is always warm, swapping one identical, stateless process for another identical, stateless process doesn't matter by definition.
 
-` http.createServer((req, res, next) => res.write('<h1>hello, this is pod ' + podName + ' reporting, yo... just say\'in</h1>'));`
+` http.createServer((req, res, next) => res.write('<h1>hello, this is pod ' + podName + ' reporting, yo...</h1>'));`
 
-This how we will should achieve at least five-nines of uptime. In theory, even if the node that has the master goes down, the cluster should be healed within the allowable downtime for 5-9's.  This also assumes the compute zone the cluster is in doesn't experience downtime which is unlikely but definitely not certain. If you want to ensure higher availability it is possible but you will need to set up multiple kubernetes masters in different compute zones, or even in different regions and set up a VPN or SSL tunnel to connect the lot. If it sounds like i dont know what im talking about then you are correct.  This is beyond my knowledge at the moment so I guess if I ever come up with a need we will learn together. Each VM we create will be billed at the rates listed here. 
+
+each will use an SSD boot disk. That isn't critical but I'm a nerd, I want it, and I'm willing to pay the difference so that my system files, etc are on SSD. We can also choose to have our persistent data on SSD, say for a database, but that is another button we will need to push later. 
+
+
+
+
+Each VM we create will be billed at the rates listed here. 
 
 [Pricing for Google Compute Engine Instances](https://cloud.google.com/compute/pricing).  
 
