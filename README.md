@@ -135,7 +135,21 @@ These are tasks we need to complete
 
 Or you can conveniently use the script I wrote to make the mundane easy. Its found in /bin/ssl/makeInitSet.sh. You will need to enter some configuration details into rootCA.conf and X509.conf in the directory with the script.
 
-Here is the link to the openssl website for writing a [X059 configuration file](https://docs.genesys.com/Documentation/PSDK/9.0.x/Developer/TLSOpenSSLConfigurationFile) and for the [Root CA configuration file](https://jamielinux.com/docs/openssl-certificate-authority/appendix/root-configuration-file.html)
+Here is the link to the openssl website for writing a [X059 configuration file](https://docs.genesys.com/Documentation/PSDK/9.0.x/Developer/TLSOpenSSLConfigurationFile) and for the [Root CA configuration file](https://jamielinux.com/docs/openssl-certificate-authority/appendix/root-configuration-file.html) and here are the commands we called in that script with links to the docs for info on the flags used
+
+[openssl genrsa](https://www.openssl.org/docs/manmaster/man1/genrsa.html) - RSA key generation utility
+
+`openssl genrsa -out new.key 4096`
+
+[openssl req](https://www.openssl.org/docs/manmaster/man1/req.html) - certificate generating utility
+
+`cat rootCA.conf | openssl req -key ca.key -new -x509 -days 7300 -sha256 -out ca.crt -extensions v3_ca`
+
+`openssl req -new -sha256 -nodes -newkey rsa:4096 -keyout new.key -out new.csr -config <( cat X509.conf )`
+
+[openssl x509](https://www.openssl.org/docs/manmaster/man1/x509.html) - certificate signing utility
+
+`openssl x509 -req -days 500 -sha256 -in new.csr -out new.crt -CA signatory.crt -CAkey signatory.key -CAcreateserial -extfile X509.conf -passin "pass:password"`
 
 ---
 ## 3) Install Helm/Tiller
