@@ -135,13 +135,7 @@ These are tasks we need to complete
 
 Or you can conveniently use the script I wrote to make the mundane easy. Its found in /bin/ssl/makeInitSet.sh. You will need to enter some configuration details into rootCA.conf and X509.conf in the directory with the script.
 
-Here is the link to the openssl website for writing a 
-
-[X059 configuration file](https://docs.genesys.com/Documentation/PSDK/9.0.x/Developer/TLSOpenSSLConfigurationFile)
-
-[Root CA configuration file](https://jamielinux.com/docs/openssl-certificate-authority/appendix/root-configuration-file.html)
-
-The big picture will be creating a private certificate signing authority so that we can self-sign our own certificates for secured communication.  We will create a root CA cert, a signing cert so that we dont have to expose our our root cert, and client certs for Helm and Tiller to utilize.
+Here is the link to the openssl website for writing a [X059 configuration file](https://docs.genesys.com/Documentation/PSDK/9.0.x/Developer/TLSOpenSSLConfigurationFile) and for the [Root CA configuration file](https://jamielinux.com/docs/openssl-certificate-authority/appendix/root-configuration-file.html)
 
 ---
 ## 3) Install Helm/Tiller
