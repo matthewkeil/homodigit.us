@@ -115,12 +115,25 @@ SSL Videos to watch
 - [Intro to Digital Certificates](https://www.youtube.com/watch?v=qXLD2UHq2vk&t=10s). A shorter, less MIT version of the info above.
 - [for the ADD crowd here is a 2min version of the same info from 30k feet](https://www.youtube.com/watch?v=SJJmoDZ3il8)
 - [Creating self-signed ssl certificates](https://www.youtube.com/watch?v=T4Df5_cojAs)
-
-Here is the Helm/Tiller specifics from a theory perspective.  We will get to code below
 - [Intro to gRPC](https://www.youtube.com/watch?v=RoXT_Rkg8LA) Not critical to know.
-- [Securing Helm - Helm Summit 2018](https://www.youtube.com/watch?v=U8chk2s3i94&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=3&t=942s)
+- [Securing Helm - Helm Summit 2018](https://www.youtube.com/watch?v=U8chk2s3i94&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=3&t=942s) I fast forwarded you to the section relevant for our use.
 
-We need to get our ssl certs sorted before we can ensure secure communication between Helm and Tiller.  You can find some info on what the heck X.509 is [here](https://en.wikipedia.org/wiki/X.509) [here](https://security.stackexchange.com/questions/36932/what-is-the-difference-between-ssl-and-x-509-certificates) and [here](http://www.sslauthority.com/x509-what-you-should-know/), what [self-signed ssl certificates are here](). There are a few ways to accomplish this and they are reviewed in the first video "Securing Helm." You can find a script in /bin/ssl of t6 b his repository that will help create them for us.  You will need to enter some configuration details into rootCA.conf and X509.conf in the directory with the scripts.
+Info Links
+- [filename extensions](https://en.wikipedia.org/wiki/X.509#Certificate_filename_extensions)
+- [what is x.509](https://security.stackexchange.com/questions/36932/what-is-the-difference-between-ssl-and-x-509-certificates)
+- [minimum x.509 conf](http://www.sslauthority.com/x509-what-you-should-know/)
+
+These are tasks we need to complete
+1) create a private key for our CA
+2) create a conf file for our CA
+3) use the key and conf file to create a self signed certificate for the CA
+4) create a conf file for our intermediate CA
+5) use that conf file to create a CSR and key for the intermediate CA
+6) use those plus the CA cert, key and password to create the intermediate CA cert
+7) concat the certs in proper order to create the chain
+8) create CSR, cert and key set using intermediate CA key and password for both Tiller and Helm
+
+Or you can conveniently use the script I wrote to make the mundane easy. Its found in /bin/ssl/makeInitSet.sh. You will need to enter some configuration details into rootCA.conf and X509.conf in the directory with the script.
 
 Here is the link to the openssl website for writing a 
 

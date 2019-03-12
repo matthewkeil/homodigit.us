@@ -1,7 +1,7 @@
 #!/bin/bash
-# set -x
+set -x
 
-DIR=../tiller
+DIR=../../ssl
 
 [[ ! -d $DIR ]] && mkdir "$DIR"
 #
@@ -19,21 +19,21 @@ function makeKeyCsrCertSet() {
         openssl req -new -sha256 -nodes \
             -newkey rsa:4096 -keyout "$PREFIX".key \
             -out "$PREFIX".csr \
-            -config <( cat ../ssl/homodigit.us.conf ) > /dev/null 2>&1
+            -config <( cat X509.conf ) > /dev/null 2>&1
     else
         printf "\n>>>\n>>> ${1} key and csr both exist. skipping\n>>>\n"
     fi
 
-    SIGNATORY="${DIR}/signing"
+    SIGNATORY="${DIR}/intermediateCA"
     
-    [[ $1 == 'signing' ]] && SIGNATORY="${DIR}/ca"
+    [[ $1 == 'intermediateCA' ]] && SIGNATORY="${DIR}/ca"
 
     printf "\n>>>\n>>> $SIGNATORY cert signing for ${1}.crt\n>>>\n"
 
     openssl x509 -req -days 500 -sha256 \
         -in "$PREFIX".csr -out "$PREFIX".crt \
         -CA "$SIGNATORY".crt -CAkey "$SIGNATORY".key -CAcreateserial  \
-        -extfile ../ssl/homodigit.us.X509.conf \
+        -extfile X509.conf \
         -passin "pass:homodigitus" > /dev/null 2>&1
 }
 #
@@ -55,14 +55,15 @@ function generateCACerts() {
         printf "\n>>>\n>>> ca.crt exists. skipping...\n>>>\n"
     else 
         printf "\n>>>\n>>> ca.crt is missing. generating one\n>>>\n"
-        CUR_DIR="$(pwd)"
-        cd $DIR && rm $(ls | grep -e '.crt') > /dev/null 2>&1
-        cd $CUR_DIR
-        cat ../ssl/rootCA.conf | openssl req -key ${PREFIX}.key -new -x509 \
+        # if CA crt is missing we will delete the rest in the ssl folder
+        # CUR_DIR="$(pwd)"
+        # cd $DIR && rm $(ls | grep -e '.crt') > /dev/null 2>&1
+        # cd $CUR_DIR
+        cat rootCA.conf | openssl req -key ${PREFIX}.key -new -x509 \
             -days 7300 -sha256 -out ${PREFIX}.crt -extensions v3_ca > /dev/null 2>&1
     fi
     
-    makeKeyCsrCertSet signing
+    makeKeyCsrCertSet intermediateCA
 }
 #
 #
@@ -77,12 +78,13 @@ generateCACerts
 #
 makeKeyCsrCertSet tiller
 
-cat "$DIR"/tiller.crt "$DIR"/signing.crt "$DIR"/ca.crt > "$DIR"/tiller.pem
+cat "$DIR"/tiller.crt "$DIR"/intermediateCA.crt "$DIR"/ca.crt > "$DIR"/tiller.pem
 
 makeKeyCsrCertSet helm
 
-cat "$DIR"/helm.crt "$DIR"/signing.crt "$DIR"/ca.crt > "$DIR"/helm.pem
+cat "$DIR"/helm.crt "$DIR"/intermediateCA.crt "$DIR"/ca.crt > "$DIR"/helm.pem
 
+find "$DIR" -name "*.csr" -delete
 # [[ -f "$PREFIX".service-account.yaml ]] && printf "\n>>>\n>>> ${PREFIX}.service-account.yaml is missing\n>>>\n" && exit 1
 # kubectl apply -f "$PREFIX".service-account.yaml
 
