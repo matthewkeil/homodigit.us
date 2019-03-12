@@ -111,7 +111,7 @@ read the settings for the next command 'gcloud container clusters create' [here]
 ## 2) Facilitate secure communication between Helm and Tiller
 
 SSL Videos to watch
-- [MIT OpenCourseWare - SSL and HTTPS](https://www.youtube.com/watch?v=q1OF_0ICt9A) on youtube. It is MIT thorough as one would hope. Its also as long as your face when you realized you needed to have a base understanding of this stuff.
+- [MIT OpenCourseWare - SSL and HTTPS](https://www.youtube.com/watch?v=q1OF_0ICt9A) on youtube. It is MIT thorough as one would hope. Its also as long.
 - [Intro to Digital Certificates](https://www.youtube.com/watch?v=qXLD2UHq2vk&t=10s). A shorter, less MIT version of the info above.
 - [for the ADD crowd here is a 2min version of the same info from 30k feet](https://www.youtube.com/watch?v=SJJmoDZ3il8)
 - [Creating self-signed ssl certificates](https://www.youtube.com/watch?v=T4Df5_cojAs)
