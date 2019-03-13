@@ -57,12 +57,13 @@ The first question you should ask yourself is how available does your cluster ne
 
 Next, does the site's target client live in one region, like the US or Asia, or are they global? We will assume one region. To be fair, if you have a global audience and need high availability, this doc is a great executive overview to manage someone doing that, like as part of their full-time job. Wink. Coincidentally, I'm for hire as this is one of my projects for coding boot camp. What can I say, I'm an overachiever...
 
-We have another choice to make is how many masters we want. That is silly to ask when I haven't introduced it. [Watch this video.]() OK, you are back. Chances of a data center going down and taking your master with it are small but possible so placing redundant masters in different physical facilities can make sense depending on your use case. I think the big providers usually prioritize the master nodes when scheduling work (ie the preempible part) and dont cannibalize them as readily thus killing the routing tables. It's NOT a common thing, nor is a data center going down, but it's a point of note.
+We have another choice to make is how many masters we want. That is silly to ask when I haven't introduced them. [Watch me](https://www.youtube.com/watch?v=DZ-Wv3XNoAk) and [read me.](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/architecture.md#architecture) OK, you are back. Chances of a data center going down and taking your master with it are small but possible so placing redundant masters in different physical facilities can make sense depending on your use case. In google's case the master does not count toward your number of nodes, its sort of baked in, but if the data center goes offline so does your app. It's NOT a common thing but it's a point of note.
 
 So to summarize, from least to most available:
 - 1 node, 1 master, 1 zone, 1 region
 - many nodes, 1 master, 1 zone, 1 region
 - many nodes, many masters, 1 zone, 1 region
+- many nodes, 1 master, many zones, 1 region
 - many nodes, many masters, many zones, 1 region (regional cluster and the next topic up)
 - many nodes, many masters, many zones, many regions
 
@@ -74,9 +75,11 @@ We are using [`--preemptible` machines](https://cloud.google.com/kubernetes-engi
 
 ` http.createServer((req, res, next) => res.write('<h1>hello, this is pod ' + podName + ' reporting, yo...</h1>'));`
 
-There are few levels of "persistent" data we should discuss. The fastest will be RAM storage. While not really persistent it will be loaded the same way from the Docker image.  Should memory run out it will overflow into a swap file.
+There are few levels of "persistent" data we should discuss. The fastest will be RAM storage. While not really persistent it affects the next type. Should memory run out it will overflow into a swap file.
 
-The second fastest will be persistent disks. They can be sized with the `--disk-size=DISK_SIZE` [flag.](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create#--disk-size) This is where disk access happens during runtime, ie the warmed cache of a database that is larger than memory, and thus where memory swap files are loaded. If you want your page file to run quicker you can adjust this by using the `--disk-type=pd-ssd` [flag.](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create#--disk-type) Alternately you can choose a different machine type with more memory to avoid needing a swap file. Persistent storage, like the database files that aren't in cache, are best handled by another method. We will get there.
+The second fastest will be persistent disks. They can be sized with the `--disk-size=DISK_SIZE` [flag.](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create#--disk-size) This is where disk access actually happens when the "file structure" is called from a workload.  Like memory overruns that require swap files, and thus where your warmed cache will live, like a database. If you want your db "to be faster" you can reduce latency by caching some of the frequent query responses and returning that instead of a fresh query. At some point space in memory will run out and if the cache is set to save more than memory will allow it goes to the disk, as a swap file.  To solve that problem you can either change the [`--machine-type` flag](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create#--machine-type) to one with more memory or you can increase the disk speed so the cache will be quicker using the [`--disk-type=pd-ssd` flag.](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create#--disk-type)
+
+Persistent storage, like the database files that aren't in cache, are best handled by another method. We will get there. Serving stateful data (REDIS, SQL, etc.) no matter where it lives is a more advanced topic worthy of its own discussion. For now use mLab and follow me to read that post when it happens.
 
 [This is the full google discussion about disks](https://cloud.google.com/compute/docs/disks/).
 
@@ -115,7 +118,7 @@ Now that we have a cluster up and running lets set up our machine to interact wi
 
 The idea of having many instances of an app running is different. That is a workload. Workloads run on machines (or virtual machines in this case) and machines can run many different workloads.  My computer can run a development instance of mongodb, a few nodejs servers and a webpack-dev-server right? "Hardware" is handled by gcloud whereas the workloads are handled by kubectl.  kubectl is the command line tool that allows one to interact with a cluster and its workloads, etc.
 
-  This is a nuance and an important one so you know where to look for the right command.  You can scale the number of nodes (virtual machines) you have running in your cluster with gcloud. Those cost money for each one right.  You can also interact with bucket storage and other provider level objects through that command. Whereas one can scale the number of instances of an application running [(replication)](https://en.wikipedia.org/wiki/Replication_(computing)#Database_replication) from kubectl. That is scaling a workload and a topic for below.
+  This is a nuance and an important one so you know where to look for the right command.  You can scale the number of nodes (virtual machines) you have running in your cluster with gcloud. Those cost money for each one right.  You can also interact with bucket storage and other provider level objects through that command. Whereas one can scale the number of instances of a database [(replication)](https://www.youtube.com/watch?v=tpspO9K28PM&t=535s) from kubectl. That is scaling a workload and a topic for below.
 
 For now we will need to transfer our cluster information from gcloud to kubectl.  They are designed to work together and gcloud will help set up kubectl.
 
@@ -134,10 +137,9 @@ read the settings for the next command ['kubectl config'](https://kubernetes.io/
 ---
 ## 2) Facilitate secure communication between Helm and Tiller
 
-SSL Videos to watch
+Videos to watch
 - [MIT OpenCourseWare - SSL and HTTPS](https://www.youtube.com/watch?v=q1OF_0ICt9A) on youtube. It is MIT thorough as one would hope. Its also as long.
-- [Intro to Digital Certificates](https://www.youtube.com/watch?v=qXLD2UHq2vk&t=10s). A shorter, less MIT version of the info above.
-- [for the ADD crowd here is a 2min version of the same info from 30k feet](https://www.youtube.com/watch?v=SJJmoDZ3il8)
+- [Intro to Digital Certificates](https://www.youtube.com/watch?v=qXLD2UHq2vk&t=10s). A shorter, less MIT version of the info above. 
 - [Creating self-signed ssl certificates](https://www.youtube.com/watch?v=T4Df5_cojAs)
 - [Intro to gRPC](https://www.youtube.com/watch?v=RoXT_Rkg8LA) Not critical but nice to know.
 - [Securing Helm - Helm Summit 2018](https://www.youtube.com/watch?v=U8chk2s3i94&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=3&t=942s) - Fast forwarded to the section relevant for our use.
@@ -159,7 +161,7 @@ These are tasks we need to complete
 
 Or you can conveniently use the script I wrote to make the mundane easy. Its found in /bin/ssl/makeInitSet.sh. You will need to enter some configuration details into rootCA.conf and X509.conf in the directory with the script.
 
-Here is the link to the openssl website for writing a [X059 configuration file](https://docs.genesys.com/Documentation/PSDK/9.0.x/Developer/TLSOpenSSLConfigurationFile) and for the [Root CA configuration file](https://jamielinux.com/docs/openssl-certificate-authority/appendix/root-configuration-file.html) and here are the commands we called in that script with links to the docs for info on the flags used
+Here is the link to the openssl website for writing a [X059 configuration file](https://docs.genesys.com/Documentation/PSDK/9.0.x/Developer/TLSOpenSSLConfigurationFile) and for the [Root CA configuration file](https://jamielinux.com/docs/openssl-certificate-authority/appendix/root-configuration-file.html) and below are the commands we called in that script. Each is a link to the docs for info on the flags used.
 
 read the settings for the next command [openssl genrsa](https://www.openssl.org/docs/manmaster/man1/genrsa.html) - RSA key generation utility
 
@@ -182,14 +184,25 @@ Videos to watch
 - [Getting Started with Helm and Kubernetes](https://www.youtube.com/watch?v=HTj3MMZE6zg&index=1&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5)
 - [Building Helm Charts from the Ground Up](https://www.youtube.com/watch?v=vQX5nokoqrQ&list=PLht8mj-Kzov2ZdAAzjA7r6PMAUKo3xFr5&index=5)
 
+The docs on the Helm website are extensive and well written.
 
-Here is the doc link for the [kubectl apply](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) command.
+[Installing Helm](https://helm.sh/docs/using_helm/#installing-helm)
+
+The docs are for more than what we will need but they are good reference for the big picture. You can find all of the commands we will actually use below.  Get Helm installed. After you are done read through this.
+
+[Using SSL Between Helm and Tiller](https://helm.sh/docs/using_helm/#using-ssl-between-helm-and-tiller). You will notice that most of the instructions are for creating the ssl certificates that we did above.  There are some commands that we will need to add as they are specific to our use case.  They make brief mention of setting the [`--tiller-namespace` flag](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) and [`--service-account` flag](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#service-account-permissions). The service account, with a role-binding is precisely what we will need to add first. Click on those links to see what kubernetes objects they are talking about, but you won't want to digest it all at the moment.
+
+A thorough discussion on Roles Based Access Control is a full course on its own. So is the theory of namespace management and why/when they are applicable. It also happens that I haven't managed kubernetes at scale (ie google scale) and many of those features are for keeping Jr. Dev's on one team from killing the whole cluster of a large organization.
+
+read the settings for the next command [kubectl apply](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply)
 
 `kubectl apply -f kube/tiller/tiller.service-account.yaml`
 
 `kubectl apply -f kube/tiller/tiller.role-binding.yaml`
 
-Here is the doc link for the [helm init](https://helm.sh/docs/helm/#helm-init) command.
+That is one of the few times that you will want to apply cluster state with kubectl directly. From here on it will be easier to use Helm. Now you may have asked what the heck did I mean by apply state? [Kubernetes is declarative](https://www.youtube.com/watch?v=kadpRayoh7w), meaning "I want 3 copies of my node application to share the incoming web traffic evenly" so the system will go and make you three copies and make sure they are running with health checks. If one stops responding it will get rid of the pod and spin up a new one. Sounds simple. It's not, watch this for a great look [under the hood of how `kubectl apply` works](https://www.youtube.com/watch?v=CW3ZuQy_YZw).
+
+read the settings for the next command [helm init](https://helm.sh/docs/helm/#helm-init)
 
 `helm init --service-account tiller --upgrade`
 
@@ -201,4 +214,14 @@ Here is the doc link for the [helm init](https://helm.sh/docs/helm/#helm-init) c
 --tiller-tls-key ssl/tiller.key 
 --tls-ca-cert ssl/ca.crt`
 
+---
+## 4) Ingress, NGINX and Architectural Design
 
+Videos
+- [Four Distributed Systems Architectural Patterns](https://www.youtube.com/watch?v=tpspO9K28PM)
+- [Switching From External Load Balancing to Ingress](https://www.youtube.com/watch?v=kadpRayoh7w)
+- [Make Ingress-Nginx Work for you](https://www.youtube.com/watch?v=GDm-7BlmPPg&t=868s)
+
+Blogs/Info
+- [Kubernetes Ingress 101: NodePort, Load Balancers, and Ingress Controllers](https://blog.getambassador.io/kubernetes-ingress-nodeport-load-balancers-and-ingress-controllers-6e29f1c44f2d?fbclid=IwAR2STXLoUSQOssqKLqJ9cBTcKmh5kqZZamzHkZ_s-xqzWGYruizifFLiIlk). This one answered a lot of questions for me.
+- [kubernetes-ingress vs ingress-nginx](https://github.com/nginxinc/kubernetes-ingress/blob/master/docs/nginx-ingress-controllers.md)
