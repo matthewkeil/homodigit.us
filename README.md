@@ -115,7 +115,7 @@ Now that we have a cluster up and running lets set up our machine to interact wi
 
 The idea of having many instances of an app running is different. That is a workload. Workloads run on machines (or virtual machines in this case) and machines can run many different workloads.  My computer can run a development instance of mongodb, a few nodejs servers and a webpack-dev-server right? "Hardware" is handled by gcloud whereas the workloads are handled by kubectl.  kubectl is the command line tool that allows one to interact with a cluster and its workloads, etc.
 
-This is a nuance and an important one so you know where to look for the right command.  You can scale the number of nodes (virtual machines) you have running in your cluster with gcloud. Those cost money for each one right.  You can also interact with bucket storage and other provider level objects through that command. Whereas one can scale the number of instances of my application server [(info on replication)]() are running from kubectl. That is scaling a workload and a topic for below.
+  This is a nuance and an important one so you know where to look for the right command.  You can scale the number of nodes (virtual machines) you have running in your cluster with gcloud. Those cost money for each one right.  You can also interact with bucket storage and other provider level objects through that command. Whereas one can scale the number of instances of an application running [(replication)](https://en.wikipedia.org/wiki/Replication_(computing)#Database_replication) from kubectl. That is scaling a workload and a topic for below.
 
 For now we will need to transfer our cluster information from gcloud to kubectl.  They are designed to work together and gcloud will help set up kubectl.
 
