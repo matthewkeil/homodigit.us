@@ -216,15 +216,11 @@ read the settings for the next command [helm init](https://helm.sh/docs/helm/#he
 
 ## 4) Network Topology, Ingress and NGINX
 
-_My goal is to share this introduction, my research, and hypothesis with you below. We will apply our informed, best-guess solution and then test our assumptions, and perhaps test our second best option as well. Numbers are harder to bullshit that opinions and in this case it would appear the internet is **FULL** of opinion on this topic and very few screenshots of metrics no less side-by-side comparisons of competing setups._
-
 Ingress is a simple idea in principle and can be solved very simply... and expensively. Just throw a Cloud Load Balancer in front of your cluster and have it do all the routing to the individual services for you. And then realize its as expensive as all of your VM's put together.
 
-There are a lot of different ways to route traffic from the client to your servers. There are also a lot of different types of traffic that can get routed. Some traffic should have access to only certain areas. Others should be prevented from getting in the door at all.
+There are a HUGE number of solutions online that one can follow. All of them are different. Many use a different "plugin this" or different "addon that" and a bunch look to be hand coded! It's been exceedingly difficult to try and find an "industry consensus" I can point us all to and to. 
 
-There are a HUGE number of solutions online that one can follow. All of them are different. Many use a different "plugin this" or different "addon that" and a bunch look to be hand coded! It's been exceedingly difficult to try and find an "industry consensus" I can point us all to. Thus this section has taken me a lot of research to gain a better understanding.
-
-Ingress, as it appears is quite a contentious issue online. And I quote a stack overflow troll, "Everyone's architecture is a snowflake" and needs its own solution, or something something, grumble, grumble. It also is a really broad a rather complex set of problems that seem easy till you try. [Reading this](https://danielfm.me/posts/painless-nginx-ingress.html) gave great insight into some very sticky wickets. Here are some more resources to reference during our discussion below.
+Ingress, as it appears is also quite a contentious issue online. And I quote a stack overflow troll, "Everyone's architecture is a snowflake and needs its own solution" followed by grumbles. It also is a really broad a rather complex set of problems that seem easy till you try. [Reading this](https://danielfm.me/posts/painless-nginx-ingress.html) gave great insight into some very sticky wickets. Here are some more resources to reference.
 
 Videos
 
@@ -239,9 +235,10 @@ Blogs/Info
 - [Experience from running nginx in production](https://danielfm.me/posts/painless-nginx-ingress.html)
 
 
-Big picture we are going to need to use a cloud load balancer with at a minimum, one forwarding rule. I have tried searching for nearly two days now and the best thing I can find are a couple of GCE and GKE examples similar to [this](https://serverfault.com/questions/863569/kubernetes-can-i-avoid-using-the-gce-load-balancer-to-reduce-cost). The technique relies on exposing a service via a hack using the internal IP of the node and calling it the external IP of the service.  It also requires setting up firewall rules and updating the DNS record every time a node is restarted. This is very cheesy and the comments all note that "while this does work its not a production solution."  If you want to get a cluster online **that only you need** to use it will work.
+Big picture we are going to need to use a cloud load balancer with at a minimum, one forwarding rule. I have tried searching for nearly two days now and the best thing I can find are a couple of GCE and GKE examples similar to [this](https://serverfault.com/questions/863569/kubernetes-can-i-avoid-using-the-gce-load-balancer-to-reduce-cost). The technique relies on exposing a service via a hack using the internal IP of the node and calling it the external IP of the service.  It also requires setting up firewall rules and updating the DNS record every time a node is restarted. This is very cheesy and is most certainly for test situations.  The comments even note that "while this does work its not a production solution."  If you want to get a cluster online **that only you** use it will work. Sheesh...
 
-We will need to pay for at least the bare minimum load balancing costs but we will get 5 routing rules included. One of which will route all traffic to our nginx ingress controllers.  We will deploy 3 pods and set the `antiaffinity` property on our deployment to ensure we get one in each zone of our region.  The cloud load balancer will use its routing mechanisms to spread traffic amongst our three nginx instances and they will proxy all requests to our resources. They will also handle tls termination for the requests as our cluster is a secured network there will be no need to use https to the workload handling the request.
+We will need to pay for at least the bare minimum load balancing costs but we will get 5 routing rules included. One of which will route all traffic to our nginx ingress controllers.  We will deploy 3 pods and set the `antiaffinity` property on our deployment to motivate them to be one in each zone as apposed to potentially clustering on one node. The cloud load balancer will use its routing mechanisms to spread traffic amongst our three nginx instances and they will proxy all requests to our resources. They will also handle tls termination for the requests.
+
 
 
 

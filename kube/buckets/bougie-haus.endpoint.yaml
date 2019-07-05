@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bougie-haus-bucket
+spec:
+  type: ExternalName
+  externalName: storage.googleapis.com/bougie.haus

@@ -4,7 +4,16 @@ metadata:
   name: homodigitus-ingress
   annotations:
     kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/upstream-vhost: ''
 spec:
+  # tls:
+  #   - secretName: ingress-tls
   backend:
     serviceName: homodigitus-ingress-service
     servicePort: 8080
+  rules:
+    - host: bougie.haus
+      http:
+        - backend:
+            serviceName: bouge-haus-bucket
+            servicePort: 80
